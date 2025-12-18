@@ -1,12 +1,12 @@
 """
 Developer Tools Research API
-FastAPI application for researching developer tools using AI
 """
 import os
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import uuid
@@ -18,15 +18,8 @@ from src.workflow import ResearchWorkflow
 from src.models import ResearchState
 
 
-# Request/Response Models
 class ResearchRequest(BaseModel):
-    query: str = Field(
-        ..., 
-        min_length=3, 
-        max_length=200,
-        description="What developer tools to research",
-        examples=["best database for startups", "React state management libraries"]
-    )
+    query: str = Field(..., min_length=3, max_length=200)
 
 
 class ToolInfo(BaseModel):
@@ -40,7 +33,7 @@ class ToolInfo(BaseModel):
 
 
 class ResearchResponse(BaseModel):
-    id: str = Field(description="Unique research ID")
+    id: str
     query: str
     tools: list[ToolInfo]
     recommendations: str
@@ -53,11 +46,9 @@ class HealthResponse(BaseModel):
     groq_configured: bool
 
 
-# Cache
 research_cache: dict[str, ResearchResponse] = {}
 
 
-# App Setup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Starting Developer Tools Research API")
@@ -71,21 +62,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Developer Tools Research API",
-    description="""
-## 🔍 AI-Powered Developer Tools Research
-
-This API uses an agentic AI workflow to research and compare developer tools.
-
-### Features
-- **Automatic tool discovery** from tech articles
-- **Deep analysis** of each tool (pricing, features, integrations)
-- **AI recommendations** tailored to your needs
-
-### Tech Stack (100% Free)
-- **LLM**: Groq (Llama 3.3 70B)
-- **Search**: DuckDuckGo
-- **Orchestration**: LangGraph
-    """,
+    description="AI-powered developer tools research using LangGraph and Groq",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -99,15 +76,9 @@ app.add_middleware(
 )
 
 
-# Endpoints
-@app.get("/", tags=["Info"])
-async def root():
-    return {
-        "message": "Developer Tools Research API",
-        "docs": "/docs",
-        "health": "/health",
-        "research": "POST /research"
-    }
+@app.get("/", include_in_schema=False)
+async def landing_page():
+    return FileResponse("static/index.html")
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Info"])
@@ -167,11 +138,11 @@ async def get_research(research_id: str):
 async def get_examples():
     return {
         "examples": [
-            {"query": "best database for startups", "description": "Compare Supabase, PlanetScale, Neon"},
-            {"query": "React state management libraries", "description": "Compare Redux, Zustand, Jotai"},
-            {"query": "Python web frameworks 2024", "description": "Compare FastAPI, Django, Flask"},
-            {"query": "free backend as a service", "description": "Compare Firebase alternatives"},
-            {"query": "best CI/CD tools for small teams", "description": "Compare GitHub Actions, GitLab CI"},
+            {"query": "best database for startups"},
+            {"query": "React state management libraries"},
+            {"query": "Python web frameworks 2024"},
+            {"query": "free backend as a service"},
+            {"query": "best CI/CD tools for small teams"},
         ]
     }
 

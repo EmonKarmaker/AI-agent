@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Developer Tools Research API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        header { text-align: center; padding: 4rem 0 3rem; }
+        .logo { font-size: 3rem; margin-bottom: 1rem; }
+        h1 {
+            font-size: 2.5rem; font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 1rem;
+        }
+        .tagline { font-size: 1.25rem; color: #94a3b8; max-width: 600px; margin: 0 auto; }
+        .buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
+        .btn {
+            padding: 0.875rem 2rem; border-radius: 0.5rem; font-weight: 600;
+            font-size: 1rem; text-decoration: none; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 4rem 0; }
+        .feature-card {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem; padding: 2rem; transition: all 0.2s;
+        }
+        .feature-card:hover { background: rgba(255,255,255,0.08); transform: translateY(-4px); }
+        .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .feature-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; color: #f1f5f9; }
+        .feature-card p { color: #94a3b8; line-height: 1.6; }
+        .demo-section {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem; padding: 2rem; margin: 3rem 0;
+        }
+        .demo-section h2 { font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+        .demo-form { display: flex; gap: 1rem; max-width: 600px; margin: 0 auto; flex-wrap: wrap; }
+        .demo-input {
+            flex: 1; min-width: 250px; padding: 1rem; border-radius: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05);
+            color: #e2e8f0; font-size: 1rem;
+        }
+        .demo-input:focus { outline: none; border-color: #3b82f6; }
+        .demo-input::placeholder { color: #64748b; }
+        .demo-btn {
+            padding: 1rem 2rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;
+        }
+        .demo-btn:hover { transform: translateY(-2px); }
+        .demo-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .result-box {
+            margin-top: 1.5rem; padding: 1.5rem; background: rgba(0,0,0,0.3);
+            border-radius: 0.5rem; display: none; max-height: 400px; overflow-y: auto;
+        }
+        .result-box.show { display: block; }
+        .result-box pre { white-space: pre-wrap; word-wrap: break-word; color: #a5f3fc; font-size: 0.875rem; }
+        .spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top-color: #3b82f6; animation: spin 1s linear infinite; margin-right: 0.5rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .tech-stack { text-align: center; margin: 4rem 0; }
+        .tech-stack h2 { font-size: 1.5rem; margin-bottom: 2rem; }
+        .tech-badges { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .badge { padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 2rem; font-size: 0.875rem; color: #94a3b8; }
+        .endpoints { margin: 3rem 0; }
+        .endpoints h2 { font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+        .endpoint-list { display: grid; gap: 1rem; max-width: 600px; margin: 0 auto; }
+        .endpoint { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 0.5rem; }
+        .method { padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; }
+        .method-get { background: #10b981; color: white; }
+        .method-post { background: #3b82f6; color: white; }
+        .endpoint-path { font-family: monospace; color: #e2e8f0; }
+        .endpoint-desc { color: #64748b; margin-left: auto; font-size: 0.875rem; }
+        footer { text-align: center; padding: 3rem 0; color: #64748b; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4rem; }
+        footer a { color: #60a5fa; text-decoration: none; }
+        @media (max-width: 640px) { h1 { font-size: 1.75rem; } .tagline { font-size: 1rem; } .endpoint-desc { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🔍</div>
+            <h1>Developer Tools Research API</h1>
+            <p class="tagline">An AI-powered API that automatically researches, compares, and recommends developer tools using agentic workflows.</p>
+            <div class="buttons">
+                <a href="/docs" class="btn btn-primary">📖 API Documentation</a>
+                <a href="https://github.com/YOUR_USERNAME/AI-agent" target="_blank" class="btn btn-secondary">⭐ GitHub</a>
+            </div>
+        </header>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Agentic AI Workflow</h3>
+                <p>Multi-step LangGraph workflow that searches, extracts, analyzes, and generates recommendations automatically.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔎</div>
+                <h3>Smart Tool Discovery</h3>
+                <p>Automatically finds and extracts developer tools from tech articles and comparison posts.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Deep Analysis</h3>
+                <p>Analyzes pricing, features, language support, and integrations for each tool.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💡</div>
+                <h3>AI Recommendations</h3>
+                <p>Generates personalized recommendations using Llama 3.3 70B model.</p>
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2>🚀 Try It Live</h2>
+            <div class="demo-form">
+                <input type="text" id="queryInput" class="demo-input" placeholder="e.g., best database for startups" value="best database for startups">
+                <button onclick="runDemo()" class="demo-btn" id="demoBtn">Research</button>
+            </div>
+            <div id="resultBox" class="result-box">
+                <pre id="resultContent"></pre>
+            </div>
+        </section>
+
+        <section class="endpoints">
+            <h2>📡 API Endpoints</h2>
+            <div class="endpoint-list">
+                <div class="endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/health</span>
+                    <span class="endpoint-desc">Health check</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/examples</span>
+                    <span class="endpoint-desc">Example queries</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/research</span>
+                    <span class="endpoint-desc">Research tools</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/docs</span>
+                    <span class="endpoint-desc">Swagger UI</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="tech-stack">
+            <h2>🛠️ Tech Stack</h2>
+            <div class="tech-badges">
+                <span class="badge">FastAPI</span>
+                <span class="badge">LangGraph</span>
+                <span class="badge">Groq LLM</span>
+                <span class="badge">Llama 3.3 70B</span>
+                <span class="badge">DuckDuckGo</span>
+                <span class="badge">BeautifulSoup</span>
+                <span class="badge">Python</span>
+                <span class="badge">Docker</span>
+            </div>
+        </section>
+
+        <footer>
+            <p>Built with ❤️ using 100% Free Tech Stack</p>
+        </footer>
+    </div>
+
+    <script>
+        async function runDemo() {
+            const query = document.getElementById('queryInput').value;
+            const btn = document.getElementById('demoBtn');
+            const resultBox = document.getElementById('resultBox');
+            const resultContent = document.getElementById('resultContent');
+            if (!query.trim()) { alert('Please enter a query'); return; }
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Researching...';
+            resultBox.classList.add('show');
+            resultContent.textContent = '⏳ Searching the web, analyzing tools, and generating recommendations...\n\nThis may take 30-60 seconds...';
+            try {
+                const response = await fetch('/research', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await response.json();
+                resultContent.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultContent.textContent = '❌ Error: ' + error.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Research';
+            }
+        }
+        document.getElementById('queryInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') runDemo();
+        });
+    </script>
+</body>
+</html>
