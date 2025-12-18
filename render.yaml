@@ -1,0 +1,88 @@
+services:
+  - type: web
+    name: dev-tools-researcher
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
+```
+
+---
+
+## 12. `.dockerignore`
+```
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+__pycache__
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+.idea/
+.vscode/
+*.swp
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+*.md
+!README.md
+docs/
+dist/
+build/
+render.yaml
+.DS_Store
+Thumbs.db
+*.log
+logs/
+```
+
+---
+
+## 13. `.gitignore`
+```
+.env
+.env.local
+.env.*.local
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+.idea/
+.vscode/
+*.swp
+*.swo
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+*.log
+logs/
+.DS_Store
+Thumbs.db
+```
+
+---
+
+## 14. `.env.example`
+```
+# Groq API Key (FREE)
+# Get yours at: https://console.groq.com/
+GROQ_API_KEY=gsk_your_api_key_here
