@@ -7,6 +7,27 @@ from .scraper import ScraperService
 from .llm import LLMService
 
 
+# Fallback data for common queries when search fails
+FALLBACK_TOOLS = {
+    "database": ["Supabase", "PlanetScale", "Neon", "Firebase"],
+    "backend": ["Supabase", "Firebase", "Appwrite", "Convex"],
+    "state": ["Redux", "Zustand", "Jotai", "Recoil"],
+    "framework": ["Next.js", "Remix", "Astro", "SvelteKit"],
+    "api": ["FastAPI", "Express", "Hono", "tRPC"],
+    "auth": ["Auth0", "Clerk", "NextAuth", "Supabase Auth"],
+    "default": ["GitHub", "Vercel", "Netlify", "Railway"]
+}
+
+
+def get_fallback_tools(query: str) -> list[str]:
+    """Get fallback tools based on query keywords"""
+    query_lower = query.lower()
+    for keyword, tools in FALLBACK_TOOLS.items():
+        if keyword in query_lower:
+            return tools
+    return FALLBACK_TOOLS["default"]
+
+
 class ResearchWorkflow:
     
     def __init__(self):
@@ -27,89 +48,70 @@ class ResearchWorkflow:
         return graph.compile()
     
     def _extract_tools_node(self, state: ResearchState) -> Dict[str, Any]:
-        print(f"🔍 Searching for tools: {state.query}")
+        print(f"🔍 Step 1: Finding tools for '{state.query}'")
         
+        # Try search
         search_results = self.search.search_for_tools(state.query)
-        print(f"📄 Found {len(search_results)} articles")
         
-        if not search_results:
-            # Fallback: use the query words as potential tools
-            print("⚠️ No search results, using query as tool name")
-            return {
-                "extracted_tools": [state.query],
-                "search_results": []
-            }
+        tools = []
         
-        # Collect content from search snippets + scraped pages
-        all_content = ""
+        if search_results:
+            # Build content from snippets
+            all_content = "\n".join([
+                f"{r.title}: {r.snippet}" 
+                for r in search_results
+            ])
+            
+            # Try scraping first result for more content
+            if search_results[0].url:
+                scraped = self.scraper.scrape_url(search_results[0].url)
+                if scraped:
+                    all_content += f"\n\n{scraped}"
+            
+            # Extract tools with LLM
+            if len(all_content) > 50:
+                tools = self.llm.extract_tools(state.query, all_content)
         
-        # First, use snippets (always available)
-        for result in search_results:
-            all_content += f"\n{result.title}: {result.snippet}"
-        
-        # Then try to scrape for more content
-        for result in search_results[:2]:  # Only scrape top 2
-            print(f"📥 Scraping: {result.url[:50]}...")
-            content = self.scraper.scrape_url(result.url)
-            if content:
-                all_content += f"\n\n{content[:1500]}"
-                print(f"✅ Got {len(content)} chars")
-            else:
-                print(f"⚠️ Scrape failed, using snippet")
-        
-        if len(all_content) < 100:
-            print("⚠️ Not enough content, using query as tool")
-            return {
-                "extracted_tools": [state.query],
-                "search_results": search_results
-            }
-        
-        # Extract tools using LLM
-        tools = self.llm.extract_tools(state.query, all_content)
-        print(f"📦 Extracted tools: {tools}")
-        
+        # Fallback if no tools found
         if not tools:
-            # Fallback: extract from search titles
-            tools = [state.query]
+            print("⚠️ Using fallback tools")
+            tools = get_fallback_tools(state.query)
+        
+        print(f"📦 Tools to research: {tools}")
         
         return {
-            "extracted_tools": tools[:5],
+            "extracted_tools": tools,
             "search_results": search_results
         }
     
     def _research_node(self, state: ResearchState) -> Dict[str, Any]:
         tools = state.extracted_tools[:4]
-        
-        if not tools:
-            tools = [state.query]
-        
-        print(f"🔬 Researching: {', '.join(tools)}")
+        print(f"🔬 Step 2: Researching {len(tools)} tools")
         
         companies = []
+        
         for tool_name in tools:
-            print(f"  🔎 Looking up: {tool_name}")
+            print(f"  → Researching: {tool_name}")
             
-            # Search for official site
+            # Search for tool
             results = self.search.search_official_site(tool_name)
             
-            if not results:
-                print(f"  ⚠️ No results for {tool_name}")
-                continue
+            website = ""
+            content = ""
+            snippet = ""
             
-            result = results[0]
-            print(f"  🌐 Found: {result.url[:50]}")
+            if results:
+                website = results[0].url
+                snippet = results[0].snippet
+                content = self.scraper.scrape_url(website)
             
-            # Try to scrape
-            content = self.scraper.scrape_url(result.url)
-            
+            # Analyze with LLM if we have content
             if content and len(content) > 100:
-                print(f"  📄 Scraped {len(content)} chars, analyzing...")
                 analysis = self.llm.analyze_tool(tool_name, content)
-                
                 company = CompanyInfo(
                     name=tool_name,
-                    description=analysis.description or result.snippet,
-                    website=result.url,
+                    description=analysis.description,
+                    website=website,
                     pricing_model=analysis.pricing_model,
                     is_open_source=analysis.is_open_source,
                     tech_stack=analysis.tech_stack,
@@ -118,11 +120,11 @@ class ResearchWorkflow:
                     integration_capabilities=analysis.integration_capabilities
                 )
             else:
-                print(f"  ⚠️ Using snippet for {tool_name}")
+                # Basic info without scraping
                 company = CompanyInfo(
                     name=tool_name,
-                    description=result.snippet,
-                    website=result.url,
+                    description=snippet or f"{tool_name} - developer tool",
+                    website=website or f"https://www.google.com/search?q={tool_name}",
                     pricing_model="Unknown"
                 )
             
@@ -132,10 +134,10 @@ class ResearchWorkflow:
         return {"companies": companies}
     
     def _analyze_node(self, state: ResearchState) -> Dict[str, Any]:
-        print("📝 Generating recommendations...")
+        print("📝 Step 3: Generating recommendations")
         
         if not state.companies:
-            return {"analysis": "No tools found to analyze. Try a different query."}
+            return {"analysis": "No tools found. Try queries like 'best database for startups' or 'React state management'."}
         
         tools_data = "\n\n".join([
             f"**{c.name}**\n"
@@ -149,11 +151,19 @@ class ResearchWorkflow:
         ])
         
         analysis = self.llm.generate_recommendations(state.query, tools_data)
-        print("✅ Recommendations generated")
         
         return {"analysis": analysis}
     
     def run(self, query: str) -> ResearchState:
+        print(f"\n{'='*50}")
+        print(f"🚀 Starting research: {query}")
+        print(f"{'='*50}\n")
+        
         initial_state = ResearchState(query=query)
         result = self.workflow.invoke(initial_state)
+        
+        print(f"\n{'='*50}")
+        print(f"✅ Research complete!")
+        print(f"{'='*50}\n")
+        
         return ResearchState(**result)
