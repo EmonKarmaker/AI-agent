@@ -13,7 +13,7 @@ An **agentic AI-powered API** that automatically researches, compares, and recom
 </p>
 
 <p align="center">
-  <a href="https://ai-agent-uw23.onrender.com">🌐 Live Demo</a> •
+  <a href=" https://ai-agent-1-53gg.onrender.com/">🌐 Live Demo</a> •
   <a href="https://ai-agent-uw23.onrender.com/docs">📖 API Docs</a> •
   <a href="#features">✨ Features</a> •
   <a href="#tech-stack">🛠️ Tech Stack</a>
@@ -355,3 +355,4 @@ MIT License - feel free to use for your portfolio!
 <p align="center">
   Built with ❤️ using 100% Free APIs
 </p>
+
